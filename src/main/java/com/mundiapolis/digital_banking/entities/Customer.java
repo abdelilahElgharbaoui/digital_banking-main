@@ -15,6 +15,7 @@ public class Customer {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    @Column(unique = true)
     private String email;
     @OneToMany(mappedBy = "customer")
     private List<BankAccount> bankAccounts;

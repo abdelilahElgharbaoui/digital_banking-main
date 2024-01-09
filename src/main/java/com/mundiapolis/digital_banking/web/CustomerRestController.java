@@ -6,6 +6,7 @@ import com.mundiapolis.digital_banking.services.BankAccountService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +45,7 @@ public class CustomerRestController {
         return bankAccountService.saveCustomer(customerDTO);
     }
 
-    @PutMapping("/customers/{customerId}")
+    @PutMapping("/customer/{customerId}")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public CustomerDTO updateCustomer(@PathVariable Long customerId, @RequestBody CustomerDTO customerDTO) {
         customerDTO.setId(customerId);
