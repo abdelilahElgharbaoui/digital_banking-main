@@ -1,14 +1,11 @@
 package com.mundiapolis.digital_banking.web;
 
-import com.mundiapolis.digital_banking.dtos.AccountHistoryDTO;
-import com.mundiapolis.digital_banking.dtos.AccountOperationDTO;
-import com.mundiapolis.digital_banking.dtos.BankAccountDTO;
-import com.mundiapolis.digital_banking.dtos.CreditDTO;
-import com.mundiapolis.digital_banking.dtos.DebitDTO;
-import com.mundiapolis.digital_banking.dtos.TransferRequestDTO;
+import com.mundiapolis.digital_banking.dtos.*;
 import com.mundiapolis.digital_banking.exeptions.BalanceNotSufficientException;
 import com.mundiapolis.digital_banking.exeptions.BankAccountNotFoundException;
+import com.mundiapolis.digital_banking.exeptions.CustomerNotFoundException;
 import com.mundiapolis.digital_banking.services.BankAccountService;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,5 +66,25 @@ public class BankAccountRestAPI {
                 
                 );
 
+    }
+    @PostMapping("/customers/{customerId}/current-accounts")
+    public CurrentBankAccountDTO saveCurrentBankAccount(
+            @RequestParam double initialBalance,
+            @RequestParam double overDraft,
+            @PathVariable Long customerId) throws CustomerNotFoundException {
+        return bankAccountService.saveCurrentBankAccount(initialBalance, overDraft, customerId);
+    }
+
+    @PostMapping("/customers/{customerId}/saving-accounts")
+    public SavingBankAccountDTO saveSavingBankAccount(
+            @RequestParam double initialBalance,
+            @RequestParam double interestRate,
+            @PathVariable Long customerId) throws CustomerNotFoundException {
+        return bankAccountService.saveSavingBankAccount(initialBalance, interestRate, customerId);
+    }
+    @GetMapping("/customers/{customerId}/accounts")
+    public List<BankAccountDTO> getBankAccountsByCustomerId(@PathVariable Long customerId) {
+        List<BankAccountDTO> bankAccountDTOS = bankAccountService.getBankAccountsByCustomerId(customerId);
+        return bankAccountDTOS;
     }
 }
