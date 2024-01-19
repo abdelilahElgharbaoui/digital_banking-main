@@ -1,15 +1,16 @@
 package com.mundiapolis.digital_banking;
 
-import com.mundiapolis.digital_banking.dtos.BankAccountDTO;
-import com.mundiapolis.digital_banking.dtos.CurrentBankAccountDTO;
-import com.mundiapolis.digital_banking.dtos.CustomerDTO;
-import com.mundiapolis.digital_banking.dtos.SavingBankAccountDTO;
+import com.mundiapolis.digital_banking.dtos.*;
 import com.mundiapolis.digital_banking.exeptions.CustomerNotFoundException;
+import com.mundiapolis.digital_banking.security.entities.AppUser;
+import com.mundiapolis.digital_banking.security.service.AccountService;
 import com.mundiapolis.digital_banking.services.BankAccountService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -20,15 +21,55 @@ public class DigitalBankingApplication {
         SpringApplication.run(DigitalBankingApplication.class, args);
     }
     @Bean
-    CommandLineRunner commandLineRunner(BankAccountService bankAccountService){
+    CommandLineRunner commandLineRunner(BankAccountService bankAccountService,AccountService accountService){
         return args -> {
-            Stream.of("Mehdi","Omar","Mohamed").forEach(name->{
-                CustomerDTO customer=new CustomerDTO();
-                customer.setName(name);
-                customer.setEmail(name+"@gmail.com");
-                bankAccountService.saveCustomer(customer);
+
+            accountService.addNewRole("USER");
+            accountService.addNewRole("ADMIN");
+
+
+
+            Stream.of("abdelilah","omar","nisrine").forEach(name -> {
+                // Check if a customer with the same name already exists
+
+                        CustomerDTO customer = new CustomerDTO();
+
+
+                    customer.setName(name);
+
+                    customer.setEmail(name + "@gmail.com");
+                    customer.setAdresse("Casablanca");
+                    customer.setPhoneNumber("07100682");
+
+
+
+                try {
+                    accountService.addNewUser(name, "1234", customer.getEmail(), "1234");
+
+                    AppUser user = accountService.loadUserByUsername(name);
+
+
+                    customer.setAppUser(user);
+
+
+                    if(!name.equals("omar")) {
+                        accountService.addRoleToUser(name, "ADMIN");
+                    }
+                    accountService.addRoleToUser(name, "USER");
+                    System.out.println("6");
+
+                    bankAccountService.saveCustomer(customer);
+                    System.out.println("7");
+
+                } catch (Exception e) {
+                    System.err.println("Error creating customer for name " + name + ": " + e.getMessage());
+                }
+
+
             });
+
             bankAccountService.listCustomers().forEach(customer->{
+
                 try {
                     bankAccountService.saveCurrentBankAccount(Math.random()*90000,9000,customer.getId());
                     bankAccountService.saveSavingBankAccount(Math.random()*120000,5.5,customer.getId());
@@ -51,5 +92,11 @@ public class DigitalBankingApplication {
                 }
             }
         };
+    }
+
+
+    @Bean
+    PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
     }
 }

@@ -1,18 +1,57 @@
 package com.mundiapolis.digital_banking.mappers;
 
-import com.mundiapolis.digital_banking.dtos.AccountOperationDTO;
-import com.mundiapolis.digital_banking.dtos.CurrentBankAccountDTO;
-import com.mundiapolis.digital_banking.dtos.CustomerDTO;
-import com.mundiapolis.digital_banking.dtos.SavingBankAccountDTO;
-import com.mundiapolis.digital_banking.entities.AccountOperation;
-import com.mundiapolis.digital_banking.entities.CurrentAccount;
-import com.mundiapolis.digital_banking.entities.Customer;
-import com.mundiapolis.digital_banking.entities.SavingAccount;
+import com.mundiapolis.digital_banking.dtos.*;
+import com.mundiapolis.digital_banking.entities.*;
+import com.mundiapolis.digital_banking.security.entities.AppUser;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BankAccountMapperImpl {
+
+    public AuditLogDTO fromAuditLog(AuditLog auditLog) {
+        AuditLogDTO auditLogDTO = new AuditLogDTO();
+        BeanUtils.copyProperties(auditLog, auditLogDTO);
+        return auditLogDTO;
+    }
+
+    public AuditLog fromAuditLogDTO(AuditLogDTO auditLogDTO) {
+        AuditLog auditLog = new AuditLog();
+        BeanUtils.copyProperties(auditLogDTO, auditLog);
+        return auditLog;
+    }
+
+
+    public AppUserDto fromAppUser(AppUser appUser) {
+        AppUserDto appUserDTO = new AppUserDto();
+        BeanUtils.copyProperties(appUser, appUserDTO);
+        return appUserDTO;
+    }
+
+    public AppUser fromAppUserDTO(AppUserDto appUserDTO) {
+        AppUser appUser = new AppUser();
+        BeanUtils.copyProperties(appUserDTO, appUser);
+        return appUser;
+    }
+//    public AgentDTO fromAgent(Agent agent){
+//        AgentDTO agentDTO=new AgentDTO();
+//        agentDTO.setData(fromCustomer(agent.getData()));
+//        agentDTO.setAgentId(agent.getAgentId());
+//        System.out.println("agentsdroo"+agentDTO);
+//        return  agentDTO;
+//    }
+//    public Agent fromAgentDTO(AgentDTO agentDTO){
+//        Agent agent=new Agent();
+//        agent.setData(fromCustomerDTO(agentDTO.getData()));
+//
+//        return  agent;
+//    }
+
+    public RequestsDTO fromRequest(Requests requests){
+        RequestsDTO request=new RequestsDTO();
+        BeanUtils.copyProperties(request,request);
+        return  request;
+    }
     public CustomerDTO fromCustomer(Customer customer) {
         CustomerDTO customerDTO = new CustomerDTO();
         BeanUtils.copyProperties(customer, customerDTO);

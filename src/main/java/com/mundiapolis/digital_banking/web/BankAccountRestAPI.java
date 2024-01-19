@@ -1,11 +1,12 @@
 package com.mundiapolis.digital_banking.web;
 
 import com.mundiapolis.digital_banking.dtos.*;
+import com.mundiapolis.digital_banking.enums.RequestStatus;
 import com.mundiapolis.digital_banking.exeptions.BalanceNotSufficientException;
 import com.mundiapolis.digital_banking.exeptions.BankAccountNotFoundException;
 import com.mundiapolis.digital_banking.exeptions.CustomerNotFoundException;
 import com.mundiapolis.digital_banking.services.BankAccountService;
-import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,12 +43,35 @@ public class BankAccountRestAPI {
         return bankAccountService.getAccountHistory(accountId, page, size);
     }
 
+    @GetMapping("/accounts/{accountId}/op")
+    public List<AccountOperationDTO> accountHistory(
+            @PathVariable String accountId) throws BankAccountNotFoundException {
+        return bankAccountService.accountHistory(accountId);
+    }
+
+
+
+
     @PostMapping("/accounts/debit")
     public DebitDTO debit(@RequestBody DebitDTO debitDTO)
             throws BankAccountNotFoundException, BalanceNotSufficientException {
+        System.out.println("heeeere"+debitDTO);
         this.bankAccountService.debit(debitDTO.getAccountId(), debitDTO.getAmount(), debitDTO.getDescription());
         return debitDTO;
     }
+
+    @GetMapping("/request")
+    public List<RequestsDTO> requestsDTOS() {
+        return bankAccountService.listRequests();
+    }
+
+    @PostMapping("/request/")
+    public void request(@RequestBody RequestsDTO request) {
+
+        this.bankAccountService.saveRequest(request.getType(), request.getCustomer(),request.getDescription());
+
+    }
+
 
     @PostMapping("/accounts/credit")
     public CreditDTO credit(@RequestBody CreditDTO creditDTO)
@@ -86,5 +110,22 @@ public class BankAccountRestAPI {
     public List<BankAccountDTO> getBankAccountsByCustomerId(@PathVariable Long customerId) {
         List<BankAccountDTO> bankAccountDTOS = bankAccountService.getBankAccountsByCustomerId(customerId);
         return bankAccountDTOS;
+    }
+
+    @PostMapping("/log")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+    public AuditLogDTO saveAudit(AuditLogDTO auditLogDTO)  {
+        return bankAccountService.saveLog(auditLogDTO);
+    }
+    @GetMapping("/log")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+    public List<AuditLogDTO> getAudit() {
+        return bankAccountService.listAuditLogDTO();
+    }
+
+    @GetMapping("/log/search")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+    public List<AuditLogDTO> searchLog(@RequestParam(name="id", defaultValue = "") Long id) {
+        return bankAccountService.searchLogByAgentID(id);
     }
 }

@@ -3,13 +3,14 @@ package com.mundiapolis.digital_banking.services;
 import com.mundiapolis.digital_banking.dtos.*;
 import com.mundiapolis.digital_banking.entities.*;
 import com.mundiapolis.digital_banking.enums.OperationType;
+import com.mundiapolis.digital_banking.enums.RequestStatus;
 import com.mundiapolis.digital_banking.exeptions.BalanceNotSufficientException;
 import com.mundiapolis.digital_banking.exeptions.BankAccountNotFoundException;
 import com.mundiapolis.digital_banking.exeptions.CustomerNotFoundException;
 import com.mundiapolis.digital_banking.mappers.BankAccountMapperImpl;
-import com.mundiapolis.digital_banking.repositories.AccountOperationRepository;
-import com.mundiapolis.digital_banking.repositories.BankAccountRepository;
-import com.mundiapolis.digital_banking.repositories.CustomerRepository;
+import com.mundiapolis.digital_banking.repositories.*;
+import com.mundiapolis.digital_banking.security.entities.AppUser;
+import com.mundiapolis.digital_banking.security.repo.AppUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +28,58 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Slf4j
 public class BankAccountServiceImpl implements BankAccountService {
+    private final AppUserRepository appUserRepository;
+    private final AuditLogRepository auditLogRepository;
+//    private AgentAccount agentAccount;
     private CustomerRepository customerRepository;
     private BankAccountRepository bankAccountRepository;
     private AccountOperationRepository accountOperationRepository;
     private BankAccountMapperImpl dtoMapper;
+    private RequestsRepository requestsRepository;
+
+
+    @Override
+    public AppUserDto saveUser(AppUserDto appUserDto) {
+        log.info("Saving new Agent");
+        AppUser age=dtoMapper.fromAppUserDTO(appUserDto);
+        System.out.println("Mapper"+age);
+        AppUser savedAgent = appUserRepository.save(age);
+        return dtoMapper.fromAppUser(savedAgent);
+
+    }
+//
+//    @Override
+//    public List<AgentDTO> listAgentDTO() {
+//        List<Agent> agents = agentAccount.findAll();
+//        List<AgentDTO> agentDTO = agents.stream().map(ag->dtoMapper.fromAgent(ag)).collect(Collectors.toList());
+//        return agentDTO;
+//    }
+
+//    @Override
+//    public List<Agent> listAgent() {
+//        List<Agent> agents = agentAccount.findAll();
+//        return agents;
+//    }
+
+    @Override
+    public List<AuditLogDTO> listAuditLogDTO() {
+        List<AuditLog> auditLogs = auditLogRepository.findAll(); // Assuming auditLogRepository is your repository
+        List<AuditLogDTO> auditLogDTOs = auditLogs.stream()
+                .map(auditLog -> dtoMapper.fromAuditLog(auditLog))
+                .collect(Collectors.toList());
+        return auditLogDTOs;
+    }
+
+
+
+    @Override
+    public AuditLogDTO saveLog(AuditLogDTO logDTO) {
+        log.info("Saving new Log");
+        AuditLog log=dtoMapper.fromAuditLogDTO(logDTO);
+        AuditLog savedLog = auditLogRepository.save(log);
+        return dtoMapper.fromAuditLog(savedLog);
+    }
+
     @Override
     public CustomerDTO saveCustomer(CustomerDTO customerDTO) {
         log.info("Saving new Customer");
@@ -156,6 +205,26 @@ customerDTOS.add(customerDTO);
     public void deleteCustomer(Long customerId){
         customerRepository.deleteById(customerId);
     }
+
+    //agent
+
+//    @Override
+//    public AgentDTO getAgent(Long agentId) throws CustomerNotFoundException {
+//        Agent agent = agentAccount.findById(agentId)
+//                .orElseThrow(() -> new CustomerNotFoundException("Agent Not found"));
+//        return dtoMapper.fromAgent(agent);
+//    }
+//    @Override
+//    public AgentDTO updateAgent(AgentDTO agentDTO) {
+//        log.info("Saving new Agent");
+//        Agent agent=dtoMapper.fromAgentDTO(agentDTO);
+//        Agent savedAgent = agentAccount.save(agent);
+//        return dtoMapper.fromAgent(savedAgent);
+//    }
+//    @Override
+//    public void deleteAgent(Long agentId){
+//        agentAccount.deleteById(agentId);
+//    }
     @Override
     public List<AccountOperationDTO> accountHistory(String accountId){
         List<AccountOperation> accountOperations = accountOperationRepository.findByBankAccountId(accountId);
@@ -183,6 +252,38 @@ customerDTOS.add(customerDTO);
         List<Customer> customers=customerRepository.searchCustomer(keyword);
         List<CustomerDTO> customersDTOS= customers.stream().map(cust->dtoMapper.fromCustomer(cust)).collect(Collectors.toList());
         return customersDTOS;
+    }
+
+    @Override
+    public List<RequestsDTO> listRequests() {
+        List<Requests> requests=requestsRepository.findAll();
+        List<RequestsDTO> requestDTOS= requests.stream().map(cust->dtoMapper.fromRequest(cust)).collect(Collectors.toList());
+        return requestDTOS;
+    }
+
+
+//    @Override
+//    public List<CustomerDTO> searchAgents(String keyword) {
+//        List<Customer> customers=agentAccount.searchAgent(keyword);
+//        List<CustomerDTO> customersDTOS= customers.stream().map(cust->dtoMapper.fromCustomer(cust)).collect(Collectors.toList());
+//        return customersDTOS;
+//    }
+
+    @Override
+    public List<AuditLogDTO> searchLogByAgentID(Long id) {
+        List<AuditLog> log=auditLogRepository.searchLogByID(id);
+        List<AuditLogDTO> logDTO= log.stream().map(l->dtoMapper.fromAuditLog(l)).collect(Collectors.toList());
+        return logDTO;
+    }
+
+
+    @Override
+    public void saveRequest(RequestStatus type, CustomerDTO customer, String description) {
+        Requests request = new Requests();
+        request.setCustomer(dtoMapper.fromCustomerDTO(customer));
+        request.setType(type);
+        request.setDescription(description);
+        requestsRepository.save(request);
     }
 
     @Override

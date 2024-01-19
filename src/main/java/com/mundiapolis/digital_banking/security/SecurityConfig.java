@@ -3,10 +3,16 @@ package com.mundiapolis.digital_banking.security;
 import java.util.List;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.sql.DataSource;
 
+import com.mundiapolis.digital_banking.security.service.UserDetailServiceImpl;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,11 +40,15 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Configuration
+@EnableWebSecurity
+@AllArgsConstructor
 public class SecurityConfig {
     // @Value("${jwt.secret}")
     // private String secretKey;
 
-    @Bean
+    private UserDetailServiceImpl userDetailServiceImpl;
+
+    // @Bean
     InMemoryUserDetailsManager inMemoryUserDetailsManager() {
         PasswordEncoder passwordEncoder = packagePasswordEncoder();
         return new InMemoryUserDetailsManager(
@@ -47,7 +57,7 @@ public class SecurityConfig {
                         .build());
     }
 
-    @Bean
+   // @Bean
     PasswordEncoder packagePasswordEncoder() {
         return new BCryptPasswordEncoder();
 
@@ -59,9 +69,10 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf((csrf) -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                // .httpBasic(Customizer.withDefaults())
-                .authorizeHttpRequests(ar -> ar.requestMatchers("/auth/login/**").permitAll())
+                .httpBasic(Customizer.withDefaults())
+                .authorizeHttpRequests(ar -> ar.requestMatchers("/auth/login/**","/swagger-ui/**").permitAll())
                 .authorizeHttpRequests(ar -> ar.anyRequest().authenticated())
+                .userDetailsService(userDetailServiceImpl)
                 .oauth2ResourceServer(oa -> oa.jwt(Customizer.withDefaults()));
 
         return httpSecurity.build();
@@ -81,28 +92,9 @@ public class SecurityConfig {
 
     }
 
-    @Bean
-    AuthenticationManager authenticationManagr(UserDetailsService userDetailsService) {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setPasswordEncoder(packagePasswordEncoder());
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
-        return new ProviderManager(daoAuthenticationProvider);
 
-    }
 
-    // @Bean
-    // CorsConfigurationSource corsConfigurationSource() {
-    // CorsConfiguration corsConfiguration = new CorsConfiguration();
-    // corsConfiguration.addAllowedOrigin("*");
-    // corsConfiguration.addAllowedMethod("*");
-    // corsConfiguration.addAllowedHeader("*");
-    // //corsConfiguration.setExposedHeaders(List.of("x-auth-token"));
 
-    // UrlBasedCorsConfigurationSource source = new
-    // UrlBasedCorsConfigurationSource();
-    // source.registerCorsConfiguration("/**", corsConfiguration);
-    // return source;
-    // }
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
@@ -113,6 +105,44 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source; // Retourne la nouvelle configuration réactive
+    }
+
+
+    //@Bean
+    public JdbcUserDetailsManager jdbcUserDetailsManager(DataSource dataSource){
+        return new JdbcUserDetailsManager(dataSource);
+    }
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+////        case a caucher pour se rappeler des infos
+//        httpSecurity.authorizeHttpRequests().requestMatchers("/webjars/**","/h2-console/**","/auth/login/**","/customers","/**").permitAll();
+//        httpSecurity.authorizeHttpRequests().requestMatchers("/user/**").hasRole("USER");
+//        httpSecurity.authorizeHttpRequests().requestMatchers("/admin/**").hasRole("ADMIN");
+//
+//        httpSecurity.cors(Customizer.withDefaults());
+//        // .httpBasic(Customizer.withDefaults())
+//
+//        httpSecurity.authorizeHttpRequests().anyRequest().authenticated();
+//        httpSecurity.exceptionHandling().accessDeniedPage("/notAuthorized");
+//        httpSecurity.userDetailsService(userDetailServiceImpl);
+//
+//
+//
+//
+//        return httpSecurity.build();
+//
+//
+//
+//
+//    }
+
+    @Bean
+    AuthenticationManager authenticationManagr(UserDetailsService userDetailsService) {
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setPasswordEncoder(packagePasswordEncoder());
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+        return new ProviderManager(daoAuthenticationProvider);
+
     }
 
 }
